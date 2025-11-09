@@ -28,15 +28,21 @@ class Pixels {
         mesh = std::vector<std::vector<bool>>(PIXELS,std::vector<bool>(PIXELS, false));
     }
 
-    void setPixel(sf::Vector2i pos) {
-        if(pos.x>=0 && pos.x<PSIZE && pos.y >= 0 && pos.y<PSIZE) {
-            std::cout<<pos.x*PIXELS / PSIZE<<std::endl;
-            mesh[pos.y*PIXELS / PSIZE][pos.x*PIXELS / PSIZE] = true;
+    void setPixel(sf::Vector2i pos, sf::RenderWindow & window) {
+        // if(pos.x>=0 && pos.x<PSIZE && pos.y >= 0 && pos.y<PSIZE) {
+        //     std::cout<<pos.x*PIXELS / PSIZE<<std::endl;
+        //     mesh[pos.y*PIXELS / PSIZE][pos.x*PIXELS / PSIZE] = true;
+        // }
+
+        if(pos.x>=0 && pos.x<window.getSize().x/2 && pos.y >= 0 && pos.y<window.getSize().y) {
+            // std::cout<<pos.x*PIXELS / window.getSize().x/2<<std::endl;
+            std::cout<<window.getSize().x/2<<std::endl;
+            mesh[pos.y*PIXELS / (window.getSize().y)][pos.x*PIXELS / (window.getSize().x/2)] = true;
         }
     }
-    void unsetPixel(sf::Vector2i pos) {
-        if(pos.x>=0 && pos.x<PSIZE && pos.y >= 0 && pos.y<PSIZE) {
-            mesh[pos.y*PIXELS / PSIZE][pos.x*PIXELS / PSIZE] = false;
+    void unsetPixel(sf::Vector2i pos, sf::RenderWindow & window) {
+        if(pos.x>=0 && pos.x<window.getSize().x/2 && pos.y >= 0 && pos.y<window.getSize().y) {
+            mesh[pos.y*PIXELS / (window.getSize().y)][pos.x*PIXELS / (window.getSize().x/2)] = false;
         }
     }
 
@@ -211,13 +217,14 @@ int main()
         }
         
         if(leftDown) {
-            pixels.setPixel(sf::Mouse::getPosition(window));
+            pixels.setPixel(sf::Mouse::getPosition(window), window);
         } else if(rightDown) {
-            pixels.unsetPixel(sf::Mouse::getPosition(window));
+            pixels.unsetPixel(sf::Mouse::getPosition(window), window);
         }
 
         if(spaceDown) {
             pixels.clear();
+            result.unsetResult();
         }
         
         window.clear();

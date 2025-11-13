@@ -1,0 +1,5 @@
+SFML library
+MNIST dataset
+
+https://youtu.be/l-9ALe3U-Fg
+https://youtu.be/aircAruvnKk

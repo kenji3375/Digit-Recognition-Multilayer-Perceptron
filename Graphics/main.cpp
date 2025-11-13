@@ -108,6 +108,8 @@ class Result {
         confText.setPosition(sf::Vector2f(370, 225));
         confText.setStyle(sf::Text::Bold);
         confText.setFillColor(sf::Color::White);
+
+        unsetResult();
     }
 
     void draw(sf::RenderWindow & window) {

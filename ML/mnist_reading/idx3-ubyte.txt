@@ -1,0 +1,16 @@
+bytes:
+
+magic number:
+    1 0
+    2 0
+    3 basic data type used
+    4 number N of dimensions used
+dimensions:
+    5->N  -  size of each dimension
+data:
+    N+1 -> inf  -  data
+
+
+images:
+basic data type - 0x08 - unsigned byte  
+3 dimensions

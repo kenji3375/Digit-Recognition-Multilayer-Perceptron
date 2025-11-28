@@ -18,14 +18,14 @@ const sf::Font font("./minecraft_font.ttf");
 class Pixels {
     
     public:
-    std::vector<std::vector<bool>> mesh;
+    std::vector<std::vector<double>> mesh;
 
     Pixels() {
-        mesh = std::vector<std::vector<bool>>(PIXELS,std::vector<bool>(PIXELS, false));
+        mesh = std::vector<std::vector<double>>(PIXELS,std::vector<double>(PIXELS, false));
     }
     
     void clear() {
-        mesh = std::vector<std::vector<bool>>(PIXELS,std::vector<bool>(PIXELS, false));
+        mesh = std::vector<std::vector<double>>(PIXELS,std::vector<double>(PIXELS, false));
     }
 
     void setPixel(sf::Vector2i pos, sf::RenderWindow & window) {
@@ -37,12 +37,32 @@ class Pixels {
         if(pos.x>=0 && pos.x<window.getSize().x/2 && pos.y >= 0 && pos.y<window.getSize().y) {
             // std::cout<<pos.x*PIXELS / window.getSize().x/2<<std::endl;
             std::cout<<window.getSize().x/2<<std::endl;
-            mesh[pos.y*PIXELS / (window.getSize().y)][pos.x*PIXELS / (window.getSize().x/2)] = true;
+            mesh[pos.y*PIXELS / (window.getSize().y)][pos.x*PIXELS / (window.getSize().x/2)] = 1;
+            
+            int ix, iy; //index x, index y
+
+            ix = pos.x*PIXELS / (window.getSize().x/2);
+            iy = pos.y*PIXELS / (window.getSize().y)-1;
+            if(iy<28 && iy>=0 && ix<28 && ix>=0 && mesh[iy][ix] < 1) mesh[iy][ix] = 0.5;
+
+            ix = pos.x*PIXELS / (window.getSize().x/2);
+            iy = pos.y*PIXELS / (window.getSize().y)+1;
+            if(iy<28 && iy>=0 && ix<28 && ix>=0 && mesh[iy][ix] < 1) mesh[iy][ix] = 0.5;
+
+            ix = pos.x*PIXELS / (window.getSize().x/2)-1;
+            iy = pos.y*PIXELS / (window.getSize().y);
+            if(iy<28 && iy>=0 && ix<28 && ix>=0 && mesh[iy][ix] < 1) mesh[iy][ix] = 0.5;
+
+            ix = pos.x*PIXELS / (window.getSize().x/2)+1;
+            iy = pos.y*PIXELS / (window.getSize().y);
+            if(iy<28 && iy>=0 && ix<28 && ix>=0 && mesh[iy][ix] < 1) mesh[iy][ix] = 0.5;
+            
+            
         }
     }
     void unsetPixel(sf::Vector2i pos, sf::RenderWindow & window) {
         if(pos.x>=0 && pos.x<window.getSize().x/2 && pos.y >= 0 && pos.y<window.getSize().y) {
-            mesh[pos.y*PIXELS / (window.getSize().y)][pos.x*PIXELS / (window.getSize().x/2)] = false;
+            mesh[pos.y*PIXELS / (window.getSize().y)][pos.x*PIXELS / (window.getSize().x/2)] = 0;
         }
     }
 
@@ -67,6 +87,7 @@ class Pixels {
             for(int x=0; x<28; ++x) {
                 if(mesh[y][x]) {
                     rect.setPosition(sf::Vector2f(x*10, y*10));
+                    rect.setFillColor(sf::Color(255*mesh[y][x],255*mesh[y][x],255*mesh[y][x]));
                     window.draw(rect);
                 }
             }

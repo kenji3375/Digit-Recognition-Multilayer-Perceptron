@@ -1,3 +1,0 @@
-add training process
-
-add softmax activation

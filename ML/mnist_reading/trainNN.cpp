@@ -13,6 +13,7 @@
 
 #define E 2.718281828459
 
+
 // inline std::string double_to_string(double n) {
 //     std::string str;
 //     std::ostringstream oss;
@@ -91,7 +92,7 @@ struct Neuron {
     Neuron(int weightsNumber, double (*act)(double)=&relu) {
         double limit = std::sqrt(2.0/weightsNumber);
         weights = std::vector<double>(weightsNumber, randomDouble(-limit,limit,4));
-        bias    = randomDouble(-2,2,2);
+        bias    = randomDouble(-limit,limit,2);
 
         activation = act;
     }
@@ -150,6 +151,8 @@ struct MultiLayerPerceptron {
         for(int n=0; n<layerSize[layers-1]; ++n) {
             neurons[layers-1][n] = Neuron(layerSize[layers-2], noActivation);
         }
+
+
     }
 
     std::vector<double> forwardPass(std::vector<double> input) {    //same as out, but saves results for each neuron
@@ -240,17 +243,29 @@ struct MultiLayerPerceptron {
 
     void trainBatch(std::vector<std::vector<std::vector<double>>> batch, double learningRate) {
 
-        std::cout<<"started training.\n ";
+        // std::cout<<"started training.\n ";
         double size = batch.size();
+
+        double loss_sum{};
+
         for(int epoch=0; epoch<size; ++epoch) {
-            std::cout<<"epoch: "<<epoch<<std::endl;
+            
+            if(! (epoch%100)) {
+
+                std::cout << "\033[1G";
+                std::cout<<"epoch: "<<epoch<<". average loss: "<<(loss_sum/epoch);//<<std::endl;
+            }
+
+            loss_sum += loss(batch[epoch][0],batch[epoch][1]);
+
             backpropagate(batch[epoch][0], batch[epoch][1], learningRate);
         }
-        std::cout<<"Training on batch finished. \n";
+        // std::cout<<"\nTraining on batch finished. \n";
+        std::cout<<"\n";
     }
 
-    void printWeightsBiases() {
-        std::string code = "weights = {\n";
+    void saveNN() {
+        std::string code = "std::vector<std::vector<std::vector<double>>> weights = {\n";
         for(int L=1; L<layers; ++L) {
             code += "   {\n";
             for(int n=0; n<layerSize[L]; ++n) {
@@ -259,14 +274,14 @@ struct MultiLayerPerceptron {
                     code += "           "+ double_to_string(neurons[L][n].weights[w]);
                     code += ", \n";
                 }
-                code += "       }\n";
+                code += "       },\n";
 
             }
             code += "   },";
         }
         code += "};\n\n";
         
-        code += "biases = {\n";
+        code += "std::vector<std::vector<double>> biases = {\n";
         for(int L=1; L<layers; ++L) {
             code += "   {\n";
             for(int n=0; n<layerSize[L]; ++n) {
@@ -313,14 +328,14 @@ struct NeuralData
         //read images
         std::ifstream imgfile(img, std::ios::binary);
 
-        if(imgfile)std::cout<<"found images file.\n";
+        // if(imgfile)std::cout<<"found images file.\n";
         imgfile.read(reinterpret_cast<char*>(&bytes4),4); // "magic number"
         
         imgfile.read(reinterpret_cast<char*>(&dim),4);    // first dimension (which means amount of images)
         
         dim = _byteswap_uint32(static_cast<uint64_t>(dim));
 
-        std::cout<<dim<<"\n";
+        // std::cout<<dim<<"\n";
 
         size = dim;
         
@@ -349,14 +364,14 @@ struct NeuralData
         
         std::ifstream lblfile(nameLabels, std::ios::binary);
         
-        if(lblfile)std::cout<<"found labels file.\n";
+        // if(lblfile)std::cout<<"found labels file.\n";
         
         lblfile.read(reinterpret_cast<char*>(&bytes4),4); // "magic number"
         
         lblfile.read(reinterpret_cast<char*>(&dim),4);    // first (and only) dimension
         
         labels = std::vector<int>(dim,0);
-    
+        
         
         for(int i=0; i<dim; ++i) {
             lblfile.read(reinterpret_cast<char*>(&byte),1);
@@ -364,6 +379,8 @@ struct NeuralData
         }
         
         lblfile.close();
+
+        std::cout<<"Loaded "<<size<<" images.\n";
         
     }
 
@@ -432,32 +449,43 @@ struct NeuralData
 
 
 
-void testLoss(MultiLayerPerceptron nn, NeuralData data) {
-    double losssum{};
+void testAccuracy(MultiLayerPerceptron nn, NeuralData data) {
+    int n = 10000;
 
-    for(int i=0; i<100; ++i) {
+    int accuratePredictions{};
+
+    std::vector<double> output(10);
+
+    int maxi;
+
+    for(int i=0; i<n; ++i) {
+        output = nn.forwardPass(data.getX(i));
+        maxi=0;
+        for(int x=0; x<10; ++x) {
+            if(output[x]>output[maxi]) {
+                maxi = x;
+            }
+        }
+        if(maxi == data.labels[i]) {
+            ++accuratePredictions;
+        }
+    }
+
+    // std::cout<<"summed loss: "<<losssum<<std::endl;
+    std::cout<<"accurate predictions: "<<static_cast<double>(accuratePredictions)/static_cast<double>(n)<<std::endl;
+}
+
+double av_loss(MultiLayerPerceptron nn, NeuralData data) {
+    double losssum{};
+    int n = 250;
+
+    for(int i=0; i<n; ++i) {
         losssum += nn.loss(data.getX(i), data.getY(i));
     }
 
-    std::cout<<"summed loss: "<<losssum<<std::endl;
+    // std::cout<<"summed loss: "<<losssum<<std::endl;
+    return losssum/static_cast<double>(n);
 }
-
-
-// void saveNN(MultiLayerPerceptron nn) {  //i will just turn it into cpp code with hardcoded weights and biases
-//     std::string code;
-//     code += "{\n";
-//     for(int L=1; L<nn.layers; ++L) {
-//         code +="    {";
-//         for(int n=0; n<nn.layerSize[L]; ++n) {
-//             std::string word= "Neuron(" + nn.layerSize[L-1];
-//             code += word;
-//         }
-//         code +="},\n";
-//     }
-//     code += "};\n";
-
-//     std::cout<<code;
-// }
 
 void test() {
     // std::string labelsName = "t10k-labels.idx1-ubyte";
@@ -467,26 +495,64 @@ void test() {
     
     NeuralData data(imagesName, labelsName);
     
-
+    labelsName = "t10k-labels.idx1-ubyte";
+    imagesName = "t10k-images.idx3-ubyte";
     
-    std::vector<int> layers = {28*28,128,10};
+    NeuralData data_test(imagesName, labelsName);
+    
+    // std::vector<int> layers = {28*28, 512, 256, 10};
+    std::vector<int> layers = {28*28, 128, 10};
     
     MultiLayerPerceptron nn(layers);
     
     
-    testLoss(nn,data);
+    testAccuracy(nn,data_test);
     
-    nn.trainBatch(data.getBatch(0,60000), 0.002);
     
-    testLoss(nn, data);
+    // i am aware of the risks of overfitting and training on test data
+    // previous attemps have showed that it works and now i'll take all training data i can to maximise results in actual program
+    nn.trainBatch(data.getBatch(0,60000), 0.01);
+    // nn.trainBatch(data.getBatch(0,30000), 0.01);
+    nn.trainBatch(data_test.getBatch(0,10000), 0.003375);
+    nn.trainBatch(data.getBatch(20000,40000), 0.002);
+    nn.trainBatch(data_test.getBatch(0,10000), 0.001);
+    // nn.trainBatch(data.getBatch(0,60000), 0.001);
+    // nn.trainBatch(data.getBatch(45000,15000), 0.0001);
     
-    // saveNN(nn);
-    std::cout<<"weights = ";
-    nn.printWeightsBiases();
-    std::cout<<"biases = ";
-    // nn.printBiases();
+    
+    // nn.trainBatch(data.getBatch(0,10000), 0.03);
+    // nn.trainBatch(data.getBatch(10000,35000), 0.01);
+    // nn.trainBatch(data.getBatch(45000,15000), 0.0001);
 
-    // data.display(0);
+    // nn.trainBatch(data.getBatch(10000, 10000), 0.005);
+    // nn.trainBatch(data.getBatch(20000, 10000), 0.0005);
+    
+    // int last_i = 0;
+    // double lr = 0.01;
+    // int batch_size = 1000;
+    // double avg_loss = av_loss(nn, data_test);
+    // double prev_avg_loss = avg_loss;
+    // while(last_i<60000-batch_size) {
+    //     std::cout<<"Element "<<last_i<<"/60000,   learning rate: "<<lr<<",   average loss on test_set "<<avg_loss<<"\n";
+    //     nn.trainBatch(data.getBatch(last_i,batch_size), lr);
+    //     last_i+=batch_size;
+
+    //     prev_avg_loss = avg_loss;
+    //     avg_loss = av_loss(nn, data_test);
+
+    //     if(prev_avg_loss > avg_loss) {
+    //         lr *= 0.9;
+    //     }
+    // }
+    
+    // nn.trainBatch(data.getBatch(1000,10000), 0.01);
+    // nn.trainBatch(data.getBatch(11000,10000), 0.001);
+    // nn.trainBatch(data.getBatch(50000,10000), 0.0001);
+    
+    testAccuracy(nn, data_test);
+    
+    nn.saveNN();
+    
 }
 
 

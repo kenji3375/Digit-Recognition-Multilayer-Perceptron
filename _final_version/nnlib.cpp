@@ -9,7 +9,6 @@
 
 #define E 2.718281828459
 
-// --- Activation functions ---
 inline double relu(double n) {
     return std::max(0.0, n);
 }
@@ -18,7 +17,6 @@ inline double noActivation(double x) {
     return x;
 }
 
-// --- Utility functions ---
 inline double randomDouble(double min, double max, int p) {
     static thread_local std::mt19937_64 rng(std::random_device{}());
     
@@ -45,7 +43,6 @@ std::vector<double> softmaxLayer(std::vector<double> output) {
     return probabilities;
 }
 
-// --- Neuron Implementation ---
 Neuron::Neuron(int weightsNumber, double (*act)(double)=&relu) {
     double limit = std::sqrt(2.0 / weightsNumber);
     weights = std::vector<double>(weightsNumber, randomDouble(-limit, limit, 4));
@@ -61,7 +58,6 @@ double Neuron::activate(std::vector<double> layer) {
     return activation(sum);
 }
 
-// --- MultiLayerPerceptron Implementation ---
 MultiLayerPerceptron::MultiLayerPerceptron(std::vector<int> matrix) {
     layers = matrix.size();
     layerSize = std::vector<int>(layers);
@@ -80,8 +76,8 @@ MultiLayerPerceptron::MultiLayerPerceptron(std::vector<int> matrix) {
     for(int n=0; n<layerSize[layers-1]; ++n)
         neurons[layers-1][n] = Neuron(layerSize[layers-2], noActivation);
 
-    // Optional: copy weights/biases from external arrays if defined
-    for(int L=1; L<layers; ++L) {
+    
+    for(int L=1; L<layers; ++L) {   //loading weights from network.cpp
         for(int n=0; n<layerSize[L]; ++n) {
             for(int w=0; w<layerSize[L-1]; ++w) {
                 neurons[L][n].weights[w] = weights[L-1][n][w];

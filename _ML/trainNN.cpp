@@ -468,10 +468,10 @@ int main(void)
     
     NeuralData data_test(imagesName, labelsName);   //loading test data
     
-    std::vector<int> layers = {28*28, 128, 10};     //setting MLP's dimensions (28*28 input layer, 1 hidden layer with 128 neurons, one output layer with 10 neurons)
+    //setting MLP's dimensions (28*28 input layer, 1 hidden layer with 128 neurons, one output layer with 10 neurons)
+    std::vector<int> layers = {28*28, 128, 10};
     
     MultiLayerPerceptron nn(layers);    //creation of MLP with given layers
-    
     
     testAccuracy(nn,data_test);         //test accuracy before training
     

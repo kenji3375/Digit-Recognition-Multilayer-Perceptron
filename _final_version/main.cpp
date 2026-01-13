@@ -34,15 +34,10 @@ class Pixels {
     }
 
     void setPixel(sf::Vector2i pos, sf::RenderWindow & window) {
-        // if(pos.x>=0 && pos.x<PSIZE && pos.y >= 0 && pos.y<PSIZE) {
-        //     std::cout<<pos.x*PIXELS / PSIZE<<std::endl;
-        //     mesh[pos.y*PIXELS / PSIZE][pos.x*PIXELS / PSIZE] = true;
-        // }
 
         if(pos.x>=0 && pos.x<window.getSize().x/2 && pos.y >= 0 && pos.y<window.getSize().y) {
-            // std::cout<<pos.x*PIXELS / window.getSize().x/2<<std::endl;
-            // std::cout<<window.getSize().x/2<<std::endl;
-            mesh[pos.y*PIXELS / (window.getSize().y)][pos.x*PIXELS / (window.getSize().x/2)] = 1;
+            
+            mesh[pos.y*PIXELS / (window.getSize().y)][pos.x*PIXELS / (window.getSize().x/2)] = 1;   //setting correct pixel using position and sizes of the window
             
             int ix, iy; //index x, index y
 
@@ -71,7 +66,7 @@ class Pixels {
         }
     }
 
-    void draw(sf::RenderWindow & window) {
+    void draw(sf::RenderWindow & window) {  //displaying the pixels
         sf::RectangleShape rect;
         
         rect.setSize(sf::Vector2f(PSIZE,PSIZE));
@@ -88,7 +83,7 @@ class Pixels {
 
 
 
-        for(int y=0; y<28; ++y) {
+        for(int y=0; y<28; ++y) {       //displaying the grid of pixels
             for(int x=0; x<28; ++x) {
                 if(mesh[y][x]) {
                     rect.setPosition(sf::Vector2f(x*10, y*10));
@@ -107,7 +102,7 @@ class Pixels {
 
 
 
-class Result {
+class Result {      //this is used to display results of digit recognition
     public:
 
     int result;
@@ -135,7 +130,7 @@ class Result {
         confText.setStyle(sf::Text::Bold);
         confText.setFillColor(sf::Color::White);
 
-        unsetResult();
+        unsetResult();  //the result is empty by default (before any recognition is done)
     }
 
     void draw(sf::RenderWindow & window) {
@@ -145,7 +140,7 @@ class Result {
 
     void getResult(Pixels pixels) {
         
-        //getting results will be made here
+        //getting results using included neural network (MLP)
 
         std::vector<double> input(28*28,0);
 
@@ -159,17 +154,15 @@ class Result {
 
         int prediction=0;
 
-        for(int i=0; i<10; ++i) {
+        for(int i=0; i<10; ++i) {                   //the digit with highest score becomes prediction
             if(output[i] > output[prediction]) {
                 prediction = i;
             }
-            // std::cout<<output[i]<<std::endl;
         }
-        // std::cout<<"\n\n\n";
 
 
         result = prediction;
-        confidence = output[prediction] * 100;
+        confidence = output[prediction] * 100;      //confidence is the percentage of this prediction
 
 
         //turning the results into text
@@ -183,8 +176,6 @@ class Result {
         
         oss << std::fixed << std::setprecision(2)<<confidence<<"%";
         confText.setString(oss.str());
-        
-        // std::cout<<"res set";
     }
     
     void unsetResult() {
@@ -201,8 +192,6 @@ int main()
     nn = new MultiLayerPerceptron(layers);
 
     sf::RenderWindow window(sf::VideoMode({WIDTH, HEIGHT}), "Digit recognition");
-    // sf::CircleShape shape(100.f);
-    // shape.setFillColor(sf::Color::Green);
 
     Pixels pixels;
     Result result;
@@ -213,7 +202,7 @@ int main()
 
 
     
-    // Create a text
+    // Create the text
     sf::Text text(font, "LMB - draw\nRMB - remove pixel\nSpace - clear all\nEscape - exit\nResult:");
     text.setCharacterSize(15);
     text.setStyle(sf::Text::Bold);
@@ -236,9 +225,6 @@ int main()
             if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && !leftDown) {
                 // std::cout<<"mouse pressed\n";
                 leftDown = true;
-                
-                // std::cout<<sf::Mouse::getPosition(window).x<<"    "<< sf::Mouse::getPosition(window).y<<"\n";
-                
             } 
             if(leftDown && !sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
                 leftDown = false;
@@ -254,6 +240,7 @@ int main()
             if(rightDown && !sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {
                 rightDown = false;
                 // std::cout<<"r mouse unpressed\n";
+                result.getResult(pixels);
             }
             
 
